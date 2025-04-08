@@ -6,7 +6,7 @@ if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true) {
     exit;
 }
 
-// Koneksi ke database di DigitalOcean
+// Koneksi ke database
 $host = "localhost"; 
 $username = "rfiduser";
 $password = "Subhan@123";
@@ -16,56 +16,51 @@ if ($mysqli->connect_error) {
     die("Koneksi gagal: " . $mysqli->connect_error);
 }
 
-// Handle SSE (Server-Sent Events) request
-if(isset($_GET['sse']) && $_GET['sse'] == 'stream') {
+// Jika request adalah untuk stream data (SSE)
+if(isset($_GET['stream']) && $_GET['stream'] == 'data') {
+    // Penting: Matikan output buffering
+    if (ob_get_level()) ob_end_clean();
+    
+    // Set header untuk SSE
     header('Content-Type: text/event-stream');
     header('Cache-Control: no-cache');
     header('Connection: keep-alive');
+    header('X-Accel-Buffering: no'); // Untuk Nginx
     
-    // Mengirimkan ID untuk mengidentifikasi update
-    echo "id: " . time() . "\n";
-    
-    // Query untuk mengambil data terbaru
-    $sql = "SELECT * FROM kehadiran ORDER BY id";
-    $result = $mysqli->query($sql);
-    
-    $data = array();
-    if ($result && $result->num_rows > 0) {
-        while($row = $result->fetch_assoc()) {
-            $data[] = $row;
+    // Fungsi untuk mengirim data
+    function sendSSEData($mysqli) {
+        $sql = "SELECT * FROM kehadiran ORDER BY id DESC";
+        $result = $mysqli->query($sql);
+        
+        $data = array();
+        if ($result && $result->num_rows > 0) {
+            while($row = $result->fetch_assoc()) {
+                // Tambahkan format Biji Kakao
+                if (is_numeric($row['uid'])) {
+                    $row['display_uid'] = "Biji Kakao " . $row['uid'];
+                } else {
+                    $row['display_uid'] = $row['uid'];
+                }
+                $data[] = $row;
+            }
         }
+        
+        echo "id: " . time() . "\n";
+        echo "data: " . json_encode($data) . "\n\n";
+        
+        // Flush output
+        flush();
     }
     
-    // Mengirim data ke klien
-    echo "data: " . json_encode($data) . "\n\n";
+    // Kirim data pertama kali
+    sendSSEData($mysqli);
     
-    // Memastikan output langsung dikirim
-    ob_flush();
-    flush();
-    exit;
+    // Exit untuk mencegah output tambahan
+    exit();
 }
 
-// Handle AJAX request untuk mendapatkan semua data
-if(isset($_GET['action']) && $_GET['action'] == 'getdata') {
-    $sql = "SELECT * FROM kehadiran ORDER BY id";
-    $result = $mysqli->query($sql);
-    
-    $data = array();
-    if ($result && $result->num_rows > 0) {
-        while($row = $result->fetch_assoc()) {
-            $data[] = $row;
-        }
-    }
-    
-    header('Content-Type: application/json');
-    echo json_encode($data);
-    exit;
-}
-
-
-
-// Tampilkan halaman normal jika bukan AJAX/SSE request
-$sql = "SELECT * FROM kehadiran ORDER BY id";
+// Halaman utama
+$sql = "SELECT * FROM kehadiran ORDER BY id DESC";
 $result = $mysqli->query($sql);
 ?>
 <!DOCTYPE html>
@@ -111,6 +106,18 @@ $result = $mysqli->query($sql);
             border-radius: 4px;
             cursor: pointer;
         }
+        .refresh-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        .manual-refresh {
+            margin-right: 20px;
+        }
         .status-indicator {
             display: inline-block;
             margin-left: 15px;
@@ -122,11 +129,7 @@ $result = $mysqli->query($sql);
             background-color: #28a745;
             color: white;
         }
-        .loading {
-            background-color: #ffc107;
-            color: black;
-        }
-        .error {
+        .offline {
             background-color: #dc3545;
             color: white;
         }
@@ -149,9 +152,15 @@ $result = $mysqli->query($sql);
 <div class="top-bar">
     <div>
         <h1>Data Biji Kakao RFID</h1>
-        <span class="status-indicator online" id="status">Online</span>
+        <div class="status-bar">
+            <span class="status-indicator online" id="status">Terhubung</span>
+            <span id="timer"></span>
+        </div>
     </div>
     <div>
+        <span class="manual-refresh">
+            <button id="refresh-btn" class="refresh-btn">Refresh Data</button>
+        </span>
         <span style="margin-right: 10px;">👤 <?= htmlspecialchars($_SESSION["username"]) ?></span>
         <form action="logout.php" method="post" style="display:inline;">
             <button type="submit" class="logout-btn">Logout</button>
@@ -163,7 +172,7 @@ $result = $mysqli->query($sql);
     <thead>
         <tr>
             <th>ID</th>
-            <th>UID</th>
+            <th>Biji Kakao</th>
             <th>Waktu Masuk</th>
             <th>Waktu Keluar</th>
         </tr>
@@ -173,7 +182,7 @@ $result = $mysqli->query($sql);
             <?php while($row = $result->fetch_assoc()): ?>
                 <tr>
                     <td><?= htmlspecialchars($row["id"]) ?></td>
-                    <td><p>biji kakao</p><?= htmlspecialchars($row["uid"]) ?></td>
+                    <td><?= is_numeric($row["uid"]) ? "Biji Kakao " . htmlspecialchars($row["uid"]) : htmlspecialchars($row["uid"]) ?></td>
                     <td><?= htmlspecialchars($row["waktu_masuk"]) ?></td>
                     <td><?= htmlspecialchars($row["waktu_keluar"]) ?></td>
                 </tr>
@@ -187,63 +196,107 @@ $result = $mysqli->query($sql);
 
 <script>
 $(document).ready(function() {
-    // Simpan data terakhir untuk perbandingan
+    let eventSource = null;
     let lastData = [];
-    let eventSource;
+    let reconnectAttempts = 0;
+    let maxReconnectAttempts = 5;
+    let reconnectInterval = 3000; // 3 detik
+    let manualRefreshMode = false;
+    let autoRefreshInterval;
+    
+    // Fungsi untuk memuat data dengan AJAX
+    function loadData() {
+        $.ajax({
+            url: window.location.pathname,
+            type: 'GET',
+            dataType: 'html',
+            success: function(response) {
+                // Ekstrak HTML tabel dari respons
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = response;
+                const newTableBody = $(tempDiv).find('#data-table tbody').html();
+                
+                // Update tabel
+                $('#data-table tbody').html(newTableBody);
+                
+                // Update waktu pembaruan
+                $("#last-update").text("Terakhir diperbarui: " + new Date().toLocaleTimeString());
+            }
+        });
+    }
     
     // Fungsi untuk memulai koneksi SSE
     function startSSE() {
+        if (manualRefreshMode) return;
+        
         // Tutup koneksi sebelumnya jika ada
         if (eventSource) {
             eventSource.close();
+            eventSource = null;
         }
         
-        // Buat koneksi SSE baru
-        eventSource = new EventSource('?sse=stream');
-        
-        // Event listener untuk menerima data
-        eventSource.onmessage = function(event) {
-            const data = JSON.parse(event.data);
-            updateTableWithHighlight(data);
-            $("#status").removeClass("loading error").addClass("online").text("Online");
-            $("#last-update").text("Terakhir diperbarui: " + new Date().toLocaleTimeString());
-        };
-        
-        // Event listener untuk error
-        eventSource.onerror = function() {
-            $("#status").removeClass("loading online").addClass("error").text("Koneksi Terputus");
-            eventSource.close();
+        try {
+            // Buat koneksi SSE baru
+            eventSource = new EventSource('?stream=data');
             
-            // Coba sambungkan kembali setelah 5 detik
-            setTimeout(startSSE, 5000);
-        };
-    }
-    function formatBijiKakao($uid) {
-    // Jika UID berupa angka, langsung konversi ke format "Biji Kakao X"
-    if (is_numeric($uid)) {
-        return "Biji Kakao " . $uid;
+            // Event listener untuk menerima data
+            eventSource.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                updateTable(data);
+                $("#status").removeClass("offline").addClass("online").text("Terhubung");
+                $("#last-update").text("Terakhir diperbarui: " + new Date().toLocaleTimeString());
+                reconnectAttempts = 0; // Reset counter jika berhasil
+            };
+            
+            // Event listener untuk terhubung
+            eventSource.onopen = function() {
+                $("#status").removeClass("offline").addClass("online").text("Terhubung");
+                reconnectAttempts = 0; // Reset counter jika berhasil
+            };
+            
+            // Event listener untuk error
+            eventSource.onerror = function() {
+                eventSource.close();
+                eventSource = null;
+                $("#status").removeClass("online").addClass("offline").text("Terputus");
+                
+                // Coba sambungkan kembali dengan interval yang bertambah
+                reconnectAttempts++;
+                if (reconnectAttempts <= maxReconnectAttempts) {
+                    setTimeout(startSSE, reconnectInterval * reconnectAttempts);
+                } else {
+                    // Jika gagal beberapa kali, aktifkan mode refresh manual
+                    manualRefreshMode = true;
+                    $("#status").text("Mode Manual - Koneksi Real-time Gagal");
+                    startAutoRefresh();
+                }
+            };
+        } catch (e) {
+            console.error("Error starting SSE:", e);
+            manualRefreshMode = true;
+            $("#status").removeClass("online").addClass("offline").text("Mode Manual - Error");
+            startAutoRefresh();
+        }
     }
     
-    // Fungsi untuk update tabel dan highlight baris baru
-    function updateTableWithHighlight(data) {
+    // Fungsi untuk update tabel dari data JSON
+    function updateTable(data) {
         let tbody = '';
         let newRows = [];
         
         if (data.length > 0) {
-            // Identifikasi baris baru berdasarkan ID
-            if (lastData.length > 0) {
-                const existingIds = lastData.map(item => item.id);
-                newRows = data.filter(item => !existingIds.includes(item.id)).map(item => item.id);
-            }
-
-            // Buat HTML untuk semua baris
+            // Identifikasi baris baru
+            const existingIds = lastData.map(item => item.id);
+            newRows = data.filter(item => !existingIds.includes(item.id)).map(item => item.id);
+            
+            // Buat HTML untuk setiap baris
             $.each(data, function(i, row) {
                 const isNew = newRows.includes(row.id);
-                tbody += '<tr' + (isNew ? ' class="highlight"' : '') + ' data-id="' + escapeHTML(row.id) + '">';
+                tbody += '<tr' + (isNew ? ' class="highlight"' : '') + '>';
                 tbody += '<td>' + escapeHTML(row.id) + '</td>';
-                tbody += '<td>' + escapeHTML(row.uid) + '</td>';
+                tbody += '<td>' + escapeHTML(row.display_uid) + '</td>';
                 tbody += '<td>' + escapeHTML(row.waktu_masuk) + '</td>';
-                tbody += '<td>' + escapeHTML(row.waktu_keluar) + '</td>';
+                tbody += '<td>' + escapeHTML(row.waktu_keluar || '') + '</td>';
                 tbody += '</tr>';
             });
         } else {
@@ -253,11 +306,11 @@ $(document).ready(function() {
         // Update tabel
         $('#data-table tbody').html(tbody);
         
-        // Update lastData untuk perbandingan berikutnya
+        // Update data terakhir
         lastData = data;
     }
     
-    // Fungsi untuk escape HTML untuk keamanan
+    // Fungsi untuk escape HTML
     function escapeHTML(str) {
         if (str === null || str === undefined) return '';
         return String(str)
@@ -268,39 +321,28 @@ $(document).ready(function() {
             .replace(/'/g, '&#039;');
     }
     
-    // Muat data awal dengan AJAX
-    function loadInitialData() {
-        $("#status").removeClass("online error").addClass("loading").text("Memuat data...");
-        $.ajax({
-            url: '?action=getdata',
-            type: 'GET',
-            dataType: 'json',
-            success: function(data) {
-                updateTableWithHighlight(data);
-                $("#status").removeClass("loading error").addClass("online").text("Online");
-                $("#last-update").text("Terakhir diperbarui: " + new Date().toLocaleTimeString());
-                
-                // Setelah memuat data awal, mulai SSE
-                startSSE();
-            },
-            error: function(xhr, status, error) {
-                console.error("Error: " + error);
-                $("#status").removeClass("loading online").addClass("error").text("Error");
-                
-                // Coba lagi dalam 5 detik
-                setTimeout(loadInitialData, 5000);
-            }
-        });
+    // Fungsi untuk aktifkan refresh otomatis sebagai fallback
+    function startAutoRefresh() {
+        if (autoRefreshInterval) {
+            clearInterval(autoRefreshInterval);
+        }
+        autoRefreshInterval = setInterval(loadData, 3000); // Refresh setiap 3 detik
     }
     
-    // Mulai dengan memuat data awal
-    loadInitialData();
-});
-
-// Tambahkan handler untuk jika halaman di-unload (user pindah halaman)
-window.addEventListener('beforeunload', function() {
-    if (window.eventSource) {
-        window.eventSource.close();
+    // Tombol refresh manual
+    $("#refresh-btn").click(function() {
+        loadData();
+    });
+    
+    // Deteksi apakah browser mendukung SSE
+    if (typeof(EventSource) !== "undefined") {
+        // Mulai SSE
+        startSSE();
+    } else {
+        // Fallback untuk browser yang tidak mendukung SSE
+        manualRefreshMode = true;
+        $("#status").removeClass("online").addClass("offline").text("Mode Manual - Browser Tidak Mendukung SSE");
+        startAutoRefresh();
     }
 });
 </script>
