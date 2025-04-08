@@ -100,6 +100,31 @@ $result = $mysqli->query($sql);
         <tr><td colspan="4">Belum ada data.</td></tr>
     <?php endif; ?>
 </table>
+<script>
+        $('#submit').click(function () {
+            var uid = $('#uid').val().trim();
+            if (uid === "") return;
 
+            $.ajax({
+                type: 'POST',
+                url: '', // Kirim ke halaman ini sendiri
+                data: { uid: uid },
+                success: function (response) {
+                    $('#hasil').html(response); // Update hasil dengan respons dari server
+                    $('#uid').val('').focus(); // Kosongkan input dan fokus kembali
+                },
+                error: function (xhr, status, error) {
+                    console.error("Error: " + error); // Tangani error jika ada
+                }
+            });
+        });
+
+        // Biar enter juga bisa submit
+        $('#uid').on('keypress', function(e) {
+            if (e.which === 13) {
+                $('#submit').click();
+            }
+        });
+    </script>
 </body>
 </html>
