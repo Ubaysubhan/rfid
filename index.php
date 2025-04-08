@@ -19,7 +19,7 @@ if ($mysqli->connect_error) {
 }
 
 // Ambil data dari tabel kehadiran
-$sql = "SELECT * FROM kehadiran ORDER BY id DESC";
+$sql = "SELECT * FROM kehadiran ORDER BY id";
 $result = $mysqli->query($sql);
 ?>
 
