@@ -7,11 +7,11 @@ if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true) {
     exit;
 }
 
-// Koneksi ke database InfinityFree
-$host = "sql301.infinityfree.com";
-$username = "if0_38686148";
-$password = "4zG9vRBLnaOlE8";
-$database = "if0_38686148_defaultdb";
+// Koneksi ke database di DigitalOcean
+$host = "localhost"; // karena file PHP ada di server yang sama dengan MySQL
+$username = "rfiduser"; // ganti sesuai user yang kamu buat di MySQL DigitalOcean
+$password = "Subhan@123"; // ganti sesuai password yang kamu set
+$database = "rfid_db"; // ganti sesuai nama database kamu
 
 $mysqli = new mysqli($host, $username, $password, $database);
 if ($mysqli->connect_error) {
@@ -19,7 +19,7 @@ if ($mysqli->connect_error) {
 }
 
 // Ambil data dari tabel kehadiran
-$sql = "SELECT * FROM kehadiran ORDER BY id";
+$sql = "SELECT * FROM kehadiran ORDER BY id DESC";
 $result = $mysqli->query($sql);
 ?>
 
@@ -87,13 +87,13 @@ $result = $mysqli->query($sql);
         <th>Waktu Keluar</th>
     </tr>
 
-    <?php if ($result->num_rows > 0): ?>
+    <?php if ($result && $result->num_rows > 0): ?>
         <?php while($row = $result->fetch_assoc()): ?>
             <tr>
-                <td><?= $row["id"] ?></td>
-                <td><?= $row["uid"] ?></td>
-                <td><?= $row["waktu_masuk"] ?></td>
-                <td><?= $row["waktu_keluar"] ?></td>
+                <td><?= htmlspecialchars($row["id"]) ?></td>
+                <td><?= htmlspecialchars($row["uid"]) ?></td>
+                <td><?= htmlspecialchars($row["waktu_masuk"]) ?></td>
+                <td><?= htmlspecialchars($row["waktu_keluar"]) ?></td>
             </tr>
         <?php endwhile; ?>
     <?php else: ?>
