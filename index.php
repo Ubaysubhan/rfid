@@ -173,7 +173,7 @@ $result = $mysqli->query($sql);
             <?php while($row = $result->fetch_assoc()): ?>
                 <tr>
                     <td><?= htmlspecialchars($row["id"]) ?></td>
-                    <td><p>biji kakao<></p><?= htmlspecialchars($row["id"]) ?></td>
+                    <td><p>biji kakao</p><?= htmlspecialchars($row["uid"]) ?></td>
                     <td><?= htmlspecialchars($row["waktu_masuk"]) ?></td>
                     <td><?= htmlspecialchars($row["waktu_keluar"]) ?></td>
                 </tr>
