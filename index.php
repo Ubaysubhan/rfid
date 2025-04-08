@@ -21,12 +21,30 @@ if ($mysqli->connect_error) {
 // Ambil data dari tabel kehadiran
 $sql = "SELECT * FROM kehadiran ORDER BY id";
 $result = $mysqli->query($sql);
+
+// Jika ada permintaan AJAX untuk menambahkan UID
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['uid'])) {
+    $uid = htmlspecialchars($_POST['uid']);
+    $waktu_masuk = date('Y-m-d H:i:s'); // Waktu saat UID diterima
+
+    // Simpan UID ke database
+    $stmt = $mysqli->prepare("INSERT INTO kehadiran (uid, waktu_masuk) VALUES (?, ?)");
+    $stmt->bind_param("ss", $uid, $waktu_masuk);
+    if ($stmt->execute()) {
+        echo "UID berhasil ditambahkan: " . $uid;
+    } else {
+        echo "Error: " . $stmt->error;
+    }
+    $stmt->close();
+    exit; // Keluar setelah menangani permintaan AJAX
+}
 ?>
 
 <!DOCTYPE html>
 <html>
 <head>
     <title>Data Biji Kakao</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -65,6 +83,12 @@ $result = $mysqli->query($sql);
             border-radius: 4px;
             cursor: pointer;
         }
+        #hasil {
+            margin-top: 20px;
+            padding: 10px;
+            border: 1px solid #ccc;
+            background-color: #f9f9f9;
+        }
     </style>
 </head>
 <body>
@@ -78,6 +102,11 @@ $result = $mysqli->query($sql);
         </form>
     </div>
 </div>
+
+<!-- Form untuk input UID -->
+<input type="text" id="uid" placeholder="Masukkan UID">
+<button id="submit">Kirim</button>
+<div id="hasil"></div>
 
 <table>
     <tr>
@@ -93,38 +122,4 @@ $result = $mysqli->query($sql);
                 <td><?= htmlspecialchars($row["id"]) ?></td>
                 <td><?= htmlspecialchars($row["uid"]) ?></td>
                 <td><?= htmlspecialchars($row["waktu_masuk"]) ?></td>
-                <td><?= htmlspecialchars($row["waktu_keluar"]) ?></td>
-            </tr>
-        <?php endwhile; ?>
-    <?php else: ?>
-        <tr><td colspan="4">Belum ada data.</td></tr>
-    <?php endif; ?>
-</table>
-<script>
-        $('#submit').click(function () {
-            var uid = $('#uid').val().trim();
-            if (uid === "") return;
-
-            $.ajax({
-                type: 'POST',
-                url: '', // Kirim ke halaman ini sendiri
-                data: { uid: uid },
-                success: function (response) {
-                    $('#hasil').html(response); // Update hasil dengan respons dari server
-                    $('#uid').val('').focus(); // Kosongkan input dan fokus kembali
-                },
-                error: function (xhr, status, error) {
-                    console.error("Error: " + error); // Tangani error jika ada
-                }
-            });
-        });
-
-        // Biar enter juga bisa submit
-        $('#uid').on('keypress', function(e) {
-            if (e.which === 13) {
-                $('#submit').click();
-            }
-        });
-    </script>
-</body>
-</html>
+                <td><?= htmlspecialchars($
