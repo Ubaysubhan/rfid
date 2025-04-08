@@ -26,7 +26,7 @@ $result = $mysqli->query($sql);
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Data Kehadiran</title>
+    <title>Data Biji Kakao</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -70,7 +70,7 @@ $result = $mysqli->query($sql);
 <body>
 
 <div class="top-bar">
-    <h1>Data Kehadiran RFID</h1>
+    <h1>Data Biji Kakao RFID</h1>
     <div>
         <span style="margin-right: 10px;">👤 <?= htmlspecialchars($_SESSION["username"]) ?></span>
         <form action="logout.php" method="post" style="display:inline;">
