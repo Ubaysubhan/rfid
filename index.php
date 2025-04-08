@@ -15,7 +15,9 @@ $mysqli = new mysqli($host, $username, $password, $database);
 if ($mysqli->connect_error) {
     die("Koneksi gagal: " . $mysqli->connect_error);
 }
-
+if (is_numeric($uid)) {
+        return "Biji Kakao " . $uid;
+    }
 // Handle SSE (Server-Sent Events) request
 if(isset($_GET['sse']) && $_GET['sse'] == 'stream') {
     header('Content-Type: text/event-stream');
