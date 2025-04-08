@@ -15,9 +15,7 @@ $mysqli = new mysqli($host, $username, $password, $database);
 if ($mysqli->connect_error) {
     die("Koneksi gagal: " . $mysqli->connect_error);
 }
-if (is_numeric($uid)) {
-        return "Biji Kakao " . $uid;
-    }
+
 // Handle SSE (Server-Sent Events) request
 if(isset($_GET['sse']) && $_GET['sse'] == 'stream') {
     header('Content-Type: text/event-stream');
@@ -63,6 +61,8 @@ if(isset($_GET['action']) && $_GET['action'] == 'getdata') {
     echo json_encode($data);
     exit;
 }
+
+
 
 // Tampilkan halaman normal jika bukan AJAX/SSE request
 $sql = "SELECT * FROM kehadiran ORDER BY id";
@@ -217,6 +217,11 @@ $(document).ready(function() {
             // Coba sambungkan kembali setelah 5 detik
             setTimeout(startSSE, 5000);
         };
+    }
+    function formatBijiKakao($uid) {
+    // Jika UID berupa angka, langsung konversi ke format "Biji Kakao X"
+    if (is_numeric($uid)) {
+        return "Biji Kakao " . $uid;
     }
     
     // Fungsi untuk update tabel dan highlight baris baru
