@@ -16,7 +16,36 @@ if ($mysqli->connect_error) {
     die("Koneksi gagal: " . $mysqli->connect_error);
 }
 
-// Handle AJAX request untuk mendapatkan data terbaru
+// Handle SSE (Server-Sent Events) request
+if(isset($_GET['sse']) && $_GET['sse'] == 'stream') {
+    header('Content-Type: text/event-stream');
+    header('Cache-Control: no-cache');
+    header('Connection: keep-alive');
+    
+    // Mengirimkan ID untuk mengidentifikasi update
+    echo "id: " . time() . "\n";
+    
+    // Query untuk mengambil data terbaru
+    $sql = "SELECT * FROM kehadiran ORDER BY id";
+    $result = $mysqli->query($sql);
+    
+    $data = array();
+    if ($result && $result->num_rows > 0) {
+        while($row = $result->fetch_assoc()) {
+            $data[] = $row;
+        }
+    }
+    
+    // Mengirim data ke klien
+    echo "data: " . json_encode($data) . "\n\n";
+    
+    // Memastikan output langsung dikirim
+    ob_flush();
+    flush();
+    exit;
+}
+
+// Handle AJAX request untuk mendapatkan semua data
 if(isset($_GET['action']) && $_GET['action'] == 'getdata') {
     $sql = "SELECT * FROM kehadiran ORDER BY id";
     $result = $mysqli->query($sql);
@@ -33,7 +62,7 @@ if(isset($_GET['action']) && $_GET['action'] == 'getdata') {
     exit;
 }
 
-// Tampilkan halaman normal jika bukan AJAX request
+// Tampilkan halaman normal jika bukan AJAX/SSE request
 $sql = "SELECT * FROM kehadiran ORDER BY id";
 $result = $mysqli->query($sql);
 ?>
@@ -99,20 +128,18 @@ $result = $mysqli->query($sql);
             background-color: #dc3545;
             color: white;
         }
-        .refresh-rate {
-            margin-left: 20px;
-            display: inline-flex;
-            align-items: center;
-        }
-        .refresh-rate select {
-            margin-left: 5px;
-            padding: 5px;
-        }
         .last-update {
             font-size: 12px;
             color: #666;
             margin-top: 10px;
             text-align: right;
+        }
+        .highlight {
+            animation: highlight 3s;
+        }
+        @keyframes highlight {
+            0% { background-color: #ffff99; }
+            100% { background-color: transparent; }
         }
     </style>
 </head>
@@ -121,15 +148,6 @@ $result = $mysqli->query($sql);
     <div>
         <h1>Data Biji Kakao RFID</h1>
         <span class="status-indicator online" id="status">Online</span>
-        <span class="refresh-rate">
-            Refresh: 
-            <select id="refresh-rate">
-                <option value="1000">1 detik</option>
-                <option value="3000" selected>3 detik</option>
-                <option value="5000">5 detik</option>
-                <option value="10000">10 detik</option>
-            </select>
-        </span>
     </div>
     <div>
         <span style="margin-right: 10px;">👤 <?= htmlspecialchars($_SESSION["username"]) ?></span>
@@ -167,36 +185,54 @@ $result = $mysqli->query($sql);
 
 <script>
 $(document).ready(function() {
-    let refreshInterval;
-    let intervalTime = 3000; // Default 3 detik
+    // Simpan data terakhir untuk perbandingan
+    let lastData = [];
+    let eventSource;
     
-    // Fungsi untuk memuat data
-    function loadData() {
-        $("#status").removeClass("online error").addClass("loading").text("Memperbarui...");
+    // Fungsi untuk memulai koneksi SSE
+    function startSSE() {
+        // Tutup koneksi sebelumnya jika ada
+        if (eventSource) {
+            eventSource.close();
+        }
         
-        $.ajax({
-            url: '?action=getdata',
-            type: 'GET',
-            dataType: 'json',
-            success: function(data) {
-                updateTable(data);
-                $("#status").removeClass("loading error").addClass("online").text("Online");
-                $("#last-update").text("Terakhir diperbarui: " + new Date().toLocaleTimeString());
-            },
-            error: function(xhr, status, error) {
-                console.error("Error: " + error);
-                $("#status").removeClass("loading online").addClass("error").text("Error");
-            }
-        });
+        // Buat koneksi SSE baru
+        eventSource = new EventSource('?sse=stream');
+        
+        // Event listener untuk menerima data
+        eventSource.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+            updateTableWithHighlight(data);
+            $("#status").removeClass("loading error").addClass("online").text("Online");
+            $("#last-update").text("Terakhir diperbarui: " + new Date().toLocaleTimeString());
+        };
+        
+        // Event listener untuk error
+        eventSource.onerror = function() {
+            $("#status").removeClass("loading online").addClass("error").text("Koneksi Terputus");
+            eventSource.close();
+            
+            // Coba sambungkan kembali setelah 5 detik
+            setTimeout(startSSE, 5000);
+        };
     }
     
-    // Fungsi untuk update tabel
-    function updateTable(data) {
+    // Fungsi untuk update tabel dan highlight baris baru
+    function updateTableWithHighlight(data) {
         let tbody = '';
+        let newRows = [];
         
         if (data.length > 0) {
+            // Identifikasi baris baru berdasarkan ID
+            if (lastData.length > 0) {
+                const existingIds = lastData.map(item => item.id);
+                newRows = data.filter(item => !existingIds.includes(item.id)).map(item => item.id);
+            }
+
+            // Buat HTML untuk semua baris
             $.each(data, function(i, row) {
-                tbody += '<tr>';
+                const isNew = newRows.includes(row.id);
+                tbody += '<tr' + (isNew ? ' class="highlight"' : '') + ' data-id="' + escapeHTML(row.id) + '">';
                 tbody += '<td>' + escapeHTML(row.id) + '</td>';
                 tbody += '<td>' + escapeHTML(row.uid) + '</td>';
                 tbody += '<td>' + escapeHTML(row.waktu_masuk) + '</td>';
@@ -207,12 +243,17 @@ $(document).ready(function() {
             tbody = '<tr><td colspan="4">Belum ada data.</td></tr>';
         }
         
+        // Update tabel
         $('#data-table tbody').html(tbody);
+        
+        // Update lastData untuk perbandingan berikutnya
+        lastData = data;
     }
     
     // Fungsi untuk escape HTML untuk keamanan
     function escapeHTML(str) {
-        return str
+        if (str === null || str === undefined) return '';
+        return String(str)
             .replace(/&/g, '&amp;')
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;')
@@ -220,22 +261,40 @@ $(document).ready(function() {
             .replace(/'/g, '&#039;');
     }
     
-    // Atur interval refresh berdasarkan pilihan pengguna
-    $('#refresh-rate').on('change', function() {
-        intervalTime = parseInt($(this).val());
-        
-        if (refreshInterval) {
-            clearInterval(refreshInterval);
-        }
-        
-        refreshInterval = setInterval(loadData, intervalTime);
-    });
+    // Muat data awal dengan AJAX
+    function loadInitialData() {
+        $("#status").removeClass("online error").addClass("loading").text("Memuat data...");
+        $.ajax({
+            url: '?action=getdata',
+            type: 'GET',
+            dataType: 'json',
+            success: function(data) {
+                updateTableWithHighlight(data);
+                $("#status").removeClass("loading error").addClass("online").text("Online");
+                $("#last-update").text("Terakhir diperbarui: " + new Date().toLocaleTimeString());
+                
+                // Setelah memuat data awal, mulai SSE
+                startSSE();
+            },
+            error: function(xhr, status, error) {
+                console.error("Error: " + error);
+                $("#status").removeClass("loading online").addClass("error").text("Error");
+                
+                // Coba lagi dalam 5 detik
+                setTimeout(loadInitialData, 5000);
+            }
+        });
+    }
     
-    // Jalankan interval awal
-    refreshInterval = setInterval(loadData, intervalTime);
-    
-    // Load data pertama kali
-    loadData();
+    // Mulai dengan memuat data awal
+    loadInitialData();
+});
+
+// Tambahkan handler untuk jika halaman di-unload (user pindah halaman)
+window.addEventListener('beforeunload', function() {
+    if (window.eventSource) {
+        window.eventSource.close();
+    }
 });
 </script>
 </body>
