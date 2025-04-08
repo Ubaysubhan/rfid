@@ -4,7 +4,7 @@ session_start();
 // Koneksi ke database DigitalOcean
 $host = "localhost"; // karena PHP & MySQL di server yang sama
 $username = "rfiduser"; // sesuaikan dengan user yang kamu buat di MySQL
-$password = "password123"; // ganti ke password yang kamu set
+$password = "Subhan@123"; // ganti ke password yang kamu set
 $database = "rfid_db"; // nama database kamu
 
 $mysqli = new mysqli($host, $username, $password, $database);
