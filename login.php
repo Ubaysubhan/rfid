@@ -1,11 +1,10 @@
 <?php
 session_start();
 
-// Koneksi ke database DigitalOcean
-$host = "localhost"; // karena PHP & MySQL di server yang sama
-$username = "rfiduser"; // sesuaikan dengan user yang kamu buat di MySQL
-$password = "Subhan@123"; // ganti ke password yang kamu set
-$database = "rfid_db"; // nama database kamu
+$host = "localhost";
+$username = "rfiduser";
+$password = "Subhan@123";
+$database = "rfid_db";
 
 $mysqli = new mysqli($host, $username, $password, $database);
 if ($mysqli->connect_error) {
@@ -38,43 +37,66 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <html>
 <head>
     <title>Login Admin</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <style>
+        * {
+            box-sizing: border-box;
+        }
         body {
-            font-family: Arial;
-            background: #f0f0f0;
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(to right, #a1c4fd, #c2e9fb);
             display: flex;
             justify-content: center;
             align-items: center;
             height: 100vh;
+            margin: 0;
         }
         .login-box {
-            background: white;
-            padding: 40px;
-            box-shadow: 0 0 10px rgba(0,0,0,0.2);
-            border-radius: 8px;
-            width: 300px;
+            background: #fff;
+            padding: 40px 30px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+            border-radius: 10px;
+            width: 340px;
+        }
+        .login-box h2 {
+            text-align: center;
+            margin-bottom: 25px;
+            color: #333;
         }
         input[type="text"], input[type="password"] {
             width: 100%;
-            padding: 10px;
-            margin: 8px 0 16px;
+            padding: 12px;
+            margin: 10px 0 20px;
             border: 1px solid #ccc;
-            border-radius: 4px;
+            border-radius: 6px;
+            font-size: 14px;
         }
         input[type="submit"] {
-            background: #007BFF;
+            width: 100%;
+            background: #007bff;
             color: white;
             border: none;
-            padding: 10px 20px;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 16px;
             cursor: pointer;
-            border-radius: 4px;
+            transition: background 0.3s ease;
+        }
+        input[type="submit"]:hover {
+            background: #0056b3;
         }
         .error {
-            color: red;
-            margin-bottom: 12px;
+            color: #d93025;
+            background: #fbeaea;
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            font-size: 14px;
         }
-        h2 {
-            text-align: center;
+        label {
+            font-weight: 500;
+            font-size: 14px;
+            color: #444;
         }
     </style>
 </head>
