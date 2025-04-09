@@ -122,7 +122,7 @@ $result = $mysqli->query($sql);
     <img src="cocoa.png" alt="Biji Kakao" style="height: 100px;">
     <div>
         <h1 style="margin: 0;">Data Biji Kakao RFID</h1>
-        <div class="status-indicator online" id="status" style="margin-top: 6px;" >Auto Refresh: 3 detik</div>
+        <div class="status-indicator online" id="status" style="margin-top: 10px;" >Auto Refresh: 3 detik</div>
     </div>
 </div>
     <div>
