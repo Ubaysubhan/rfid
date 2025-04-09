@@ -46,7 +46,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
         body {
             font-family: 'Poppins', sans-serif;
-            background: linear-gradient(to right, #a1c4fd, ##99CCFF);
+            background: linear-gradient(to right, #a1c4fd, #99CCFF);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -92,7 +92,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
         input[type="submit"] {
             width: 100%;
-            background: #ff99cc;
+            background: #a1c4fd;
             color: white;
             border: none;
             padding: 12px;
