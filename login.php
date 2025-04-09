@@ -92,7 +92,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
         input[type="submit"] {
             width: 100%;
-            background: #007bff;
+            background: #ff99cc;
             color: white;
             border: none;
             padding: 12px;
