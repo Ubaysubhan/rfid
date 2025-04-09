@@ -118,9 +118,9 @@ $result = $mysqli->query($sql);
 </head>
 <body>
 <div class="top-bar">
- <div>
-        <img src="cocoa.png" alt="Biji Kakao" style="height: 50px;">
-        <h1>Data Biji Kakao RFID</h1>
+<div style="display: flex; align-items: center; gap: 15px;">
+        <img src="cocoa.png" alt="Biji Kakao" style="height: 100px;">
+        <h1 style="margin: 0;">Data Biji Kakao RFID</h1>
         <span class="status-indicator online" id="status">Auto Refresh: 3 detik</span>
 </div>
     <div>
