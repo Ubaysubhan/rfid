@@ -132,7 +132,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 <div class="container">
     <div class="image-box">
-        <img src="cacao.png" alt="Biji Kakao">
+        <img src="cocoa.png" alt="Biji Kakao">
     </div>
     <div class="login-box">
         <h2>Login Admin</h2>
