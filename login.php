@@ -1,6 +1,7 @@
 <?php
 session_start();
 
+// Koneksi ke database DigitalOcean
 $host = "localhost";
 $username = "rfiduser";
 $password = "Subhan@123";
@@ -34,8 +35,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 ?>
 
 <!DOCTYPE html>
-<html>
+<html lang="id">
 <head>
+    <meta charset="UTF-8">
     <title>Login Admin</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
     <style>
@@ -51,12 +53,29 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             height: 100vh;
             margin: 0;
         }
-        .login-box {
+        .container {
+            display: flex;
             background: #fff;
-            padding: 40px 30px;
             box-shadow: 0 8px 20px rgba(0,0,0,0.15);
-            border-radius: 10px;
-            width: 340px;
+            border-radius: 12px;
+            overflow: hidden;
+            max-width: 800px;
+            width: 100%;
+        }
+        .image-box {
+            background-color: #f8f9fa;
+            padding: 30px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .image-box img {
+            max-height: 220px;
+            max-width: 100%;
+        }
+        .login-box {
+            padding: 40px 30px;
+            width: 400px;
         }
         .login-box h2 {
             text-align: center;
@@ -98,24 +117,38 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             font-size: 14px;
             color: #444;
         }
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+                align-items: center;
+            }
+            .image-box {
+                padding: 20px;
+            }
+        }
     </style>
 </head>
 <body>
 
-<div class="login-box">
-    <h2>Login Admin</h2>
-    <?php if ($error): ?>
-        <div class="error"><?= htmlspecialchars($error) ?></div>
-    <?php endif; ?>
-    <form method="post">
-        <label>Username</label>
-        <input type="text" name="username" required>
+<div class="container">
+    <div class="image-box">
+        <img src="cacao.png" alt="Biji Kakao">
+    </div>
+    <div class="login-box">
+        <h2>Login Admin</h2>
+        <?php if ($error): ?>
+            <div class="error"><?= htmlspecialchars($error) ?></div>
+        <?php endif; ?>
+        <form method="post">
+            <label>Username</label>
+            <input type="text" name="username" required>
 
-        <label>Password</label>
-        <input type="password" name="password" required>
+            <label>Password</label>
+            <input type="password" name="password" required>
 
-        <input type="submit" value="Login">
-    </form>
+            <input type="submit" value="Login">
+        </form>
+    </div>
 </div>
 
 </body>
