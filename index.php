@@ -18,7 +18,7 @@ if ($mysqli->connect_error) {
 
 // Handle AJAX request untuk mendapatkan data terbaru
 if(isset($_GET['action']) && $_GET['action'] == 'getdata') {
-    $sql = "SELECT * FROM kehadiran ORDER BY id DESC";
+    $sql = "SELECT * FROM kehadiran ORDER BY id";
     $result = $mysqli->query($sql);
     
     $data = array();
