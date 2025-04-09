@@ -66,7 +66,7 @@ $result = $mysqli->query($sql);
             border-bottom: 1px solid #ddd;
         }
         th {
-            background: #007BFF;
+            background: #ff99cc;
             color: white;
         }
         h1 {
