@@ -119,9 +119,11 @@ $result = $mysqli->query($sql);
 <body>
 <div class="top-bar">
 <div style="display: flex; align-items: center; gap: 15px;">
-        <img src="cocoa.png" alt="Biji Kakao" style="height: 100px;">
+    <img src="cocoa.png" alt="Biji Kakao" style="height: 100px;">
+    <div>
         <h1 style="margin: 0;">Data Biji Kakao RFID</h1>
-        <span class="status-indicator online" id="status">Auto Refresh: 3 detik</span>
+        <div class="status-indicator online" id="status">Auto Refresh: 3 detik</div>
+    </div>
 </div>
     <div>
         <span style="margin-right: 10px;">👤 <?= htmlspecialchars($_SESSION["username"]) ?></span>
