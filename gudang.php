@@ -1,13 +1,11 @@
 <?php
 session_start();
 
-// Cek login
 if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true) {
     header("Location: login.php");
     exit;
 }
 
-// Koneksi database
 $host = "localhost";
 $username = "rfiduser";
 $password = "Subhan@123";
@@ -18,37 +16,64 @@ if ($mysqli->connect_error) {
     die("Koneksi gagal: " . $mysqli->connect_error);
 }
 
-// Ambil semua data produk
 $sql = "SELECT uid, waktu_masuk FROM kehadiran ORDER BY waktu_masuk DESC";
 $result = $mysqli->query($sql);
 
-// Hitung kapasitas gudang
 $jumlahBarang = $result->num_rows;
 $kapasitasMaksimum = 160;
 ?>
+
 <!DOCTYPE html>
 <html>
 <head>
     <title>Gudang Kakao</title>
+    <meta http-equiv="refresh" content="5">
     <style>
         body {
             font-family: Arial, sans-serif;
             padding: 40px;
             background: #f4f4f4;
         }
-        .top-bar {
+        .header {
             display: flex;
-            justify-content: space-between;
             align-items: center;
             margin-bottom: 20px;
         }
+        .header img {
+            width: 70px;
+            margin-right: 20px;
+        }
         h1 {
+            margin: 0;
             color: #333;
         }
+        .buttons {
+            margin-left: auto;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .buttons a {
+            text-decoration: none;
+            background-color: #007BFF;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 5px;
+        }
+        .buttons a.logout {
+            background-color: crimson;
+        }
+        .buttons span {
+            display: flex;
+            align-items: center;
+            color: #333;
+            font-weight: bold;
+        }
         .kapasitas {
-            font-size: 18px;
+            font-size: 16px;
             color: #007BFF;
             font-weight: bold;
+            margin-top: 5px;
         }
         table {
             width: 100%;
@@ -65,43 +90,22 @@ $kapasitasMaksimum = 160;
             background: #007BFF;
             color: white;
         }
-        .btn-back {
-            display: inline-block;
-            padding: 10px 15px;
-            background-color: #007BFF;
-            color: white;
-            text-decoration: none;
-            border-radius: 5px;
-            margin-bottom: 20px;
-        }
-        .clock {
-            font-size: 18px;
-            font-weight: bold;
-            color: #333;
-        }
     </style>
-    <script>
-        // Fungsi untuk menampilkan waktu realtime
-       
-    </script>
 </head>
 <body>
-</div>
-    <div style="display: flex; align-items: center; gap: 10px;">
-    <a href="gudang.php" style="text-decoration: none;">
-        <button type="button" class="logout-btn" style="background-color: #17a2b8;">📦 Home</button>
-    </a>
-    <span>👤 <?= htmlspecialchars($_SESSION["username"]) ?></span>
-    <form action="logout.php" method="post" style="display:inline;">
-        <button type="submit" class="logout-btn">Logout</button>
-    </form>
-        <div class="top-bar">
-    <h1>Data Gudang Kakao</h1>
-    <div class="clock" id="clock"></div>
-    <div class="kapasitas">Kapasitas: <?= $jumlahBarang ?>/<?= $kapasitasMaksimum ?></div>
-</div>
-</div>
 
+<div class="header">
+    <img src="img/kakao.png" alt="Logo Kakao">
+    <div>
+        <h1>Data Gudang Kakao</h1>
+        <div class="kapasitas">Kapasitas: <?= $jumlahBarang ?>/<?= $kapasitasMaksimum ?></div>
+    </div>
+    <div class="buttons">
+        <a href="index.php">🏠 Home</a>
+        <span>👤 admin</span>
+        <a href="logout.php" class="logout">Logout</a>
+    </div>
+</div>
 
 <table>
     <tr>
