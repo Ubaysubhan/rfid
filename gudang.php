@@ -120,7 +120,7 @@ $kapasitasMaksimum = 160;
             $deadline->modify('+60 days');
         ?>
             <tr>
-                <td><?= htmlspecialchars($row['uid']) ?></td>
+                <td><p>Biji Kakao</p><?= htmlspecialchars($row['uid']) ?></td>
                 <td><?= $waktuMasuk->format('Y-m-d') ?></td>
                 <td><?= $deadline->format('Y-m-d') ?></td>
             </tr>
