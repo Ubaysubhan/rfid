@@ -130,7 +130,7 @@ $kapasitasMaksimum = 160;
                 $sisaHari = (int)$interval->format('%r%a'); // %r untuk hasil bisa negatif
         ?>
             <tr>
-                                    <td><?= htmlspecialchars($row["id"]) ?></td>
+                <td><?= htmlspecialchars($row["id"]) ?></td>
                 <td><?= is_numeric($row["uid"]) ? "Biji Kakao " . htmlspecialchars($row["uid"]) : htmlspecialchars($row["uid"]) ?></td>
                 <td><?= $waktuMasuk->format('Y-m-d') ?></td>
                 <td><?= $deadline->format('Y-m-d') ?></td>
