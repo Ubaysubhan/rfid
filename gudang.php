@@ -99,7 +99,7 @@ $kapasitasMaksimum = 160;
 <body>
 
 <div class="header">
-    <img src="img/kakao.png" alt="Logo Kakao">
+    <img src="cocoa.png" alt="Logo Kakao">
     <div>
         <h1>Data Gudang Kakao</h1>
         <div class="kapasitas">Kapasitas: <?= $jumlahBarang ?>/<?= $kapasitasMaksimum ?></div>
