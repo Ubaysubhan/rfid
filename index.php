@@ -125,12 +125,16 @@ $result = $mysqli->query($sql);
         <div class="status-indicator online" id="status" style="margin-top: 10px;" >Auto Refresh: 3 detik</div>
     </div>
 </div>
-    <div>
-        <span style="margin-right: 10px;">👤 <?= htmlspecialchars($_SESSION["username"]) ?></span>
-        <form action="logout.php" method="post" style="display:inline;">
-            <button type="submit" class="logout-btn">Logout</button>
-        </form>
-    </div>
+    <div style="display: flex; align-items: center; gap: 10px;">
+    <a href="gudang.php" style="text-decoration: none;">
+        <button type="button" class="logout-btn" style="background-color: #17a2b8;">📦 Gudang</button>
+    </a>
+    <span>👤 <?= htmlspecialchars($_SESSION["username"]) ?></span>
+    <form action="logout.php" method="post" style="display:inline;">
+        <button type="submit" class="logout-btn">Logout</button>
+    </form>
+</div>
+
 </div>
 
 <table id="data-table">
