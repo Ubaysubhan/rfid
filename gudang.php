@@ -16,7 +16,7 @@ if ($mysqli->connect_error) {
     die("Koneksi gagal: " . $mysqli->connect_error);
 }
 
-$sql = "SELECT id, uid, waktu_masuk FROM kehadiran ORDER BY waktu_masuk DESC";
+$sql = "SELECT id, uid, waktu_masuk FROM kehadiran ORDER BY waktu_masuk ";
 $result = $mysqli->query($sql);
 
 $jumlahBarang = $result->num_rows;
