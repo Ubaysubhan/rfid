@@ -82,28 +82,14 @@ $kapasitasMaksimum = 160;
     </style>
     <script>
         // Fungsi untuk menampilkan waktu realtime
-        function updateClock() {
-            const now = new Date();
-            const options = {
-                timeZone: "Asia/Jakarta",
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-                hour12: false
-            };
-            const formatter = new Intl.DateTimeFormat('id-ID', options);
-            document.getElementById("clock").textContent = formatter.format(now);
-        }
-
-        setInterval(updateClock, 1000);
-        window.onload = updateClock;
+       
     </script>
 </head>
 <body>
 </div>
     <div style="display: flex; align-items: center; gap: 10px;">
     <a href="gudang.php" style="text-decoration: none;">
-        <button type="button" class="logout-btn" style="background-color: #17a2b8;">📦 Gudang</button>
+        <button type="button" class="logout-btn" style="background-color: #17a2b8;">📦 Home</button>
     </a>
     <span>👤 <?= htmlspecialchars($_SESSION["username"]) ?></span>
     <form action="logout.php" method="post" style="display:inline;">
