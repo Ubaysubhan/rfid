@@ -100,13 +100,22 @@ $kapasitasMaksimum = 160;
     </script>
 </head>
 <body>
-
-<a href="index.php" class="btn-back">⬅ Back to Home</a>
-<div class="top-bar">
+</div>
+    <div style="display: flex; align-items: center; gap: 10px;">
+    <a href="gudang.php" style="text-decoration: none;">
+        <button type="button" class="logout-btn" style="background-color: #17a2b8;">📦 Gudang</button>
+    </a>
+    <span>👤 <?= htmlspecialchars($_SESSION["username"]) ?></span>
+    <form action="logout.php" method="post" style="display:inline;">
+        <button type="submit" class="logout-btn">Logout</button>
+    </form>
+        <div class="top-bar">
     <h1>Data Gudang Kakao</h1>
     <div class="clock" id="clock"></div>
     <div class="kapasitas">Kapasitas: <?= $jumlahBarang ?>/<?= $kapasitasMaksimum ?></div>
 </div>
+</div>
+
 
 <table>
     <tr>
