@@ -90,12 +90,16 @@ $kapasitasMaksimum = 160;
             background: #007BFF;
             color: white;
         }
+        .warning {
+            color: red;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <img src="cocoa.png" alt="Logo Kakao">
+    <img src="img/kakao.png" alt="Logo Kakao">
     <div>
         <h1>Data Gudang Kakao</h1>
         <div class="kapasitas">Kapasitas: <?= $jumlahBarang ?>/<?= $kapasitasMaksimum ?></div>
@@ -112,21 +116,29 @@ $kapasitasMaksimum = 160;
         <th>UID</th>
         <th>Tanggal Masuk</th>
         <th>Deadline (60 Hari)</th>
+        <th>Sisa Hari</th>
     </tr>
     <?php if ($result && $result->num_rows > 0): ?>
-        <?php while($row = $result->fetch_assoc()): 
-            $waktuMasuk = new DateTime($row['waktu_masuk']);
-            $deadline = clone $waktuMasuk;
-            $deadline->modify('+60 days');
+        <?php 
+            $today = new DateTime(); 
+            while($row = $result->fetch_assoc()): 
+                $waktuMasuk = new DateTime($row['waktu_masuk']);
+                $deadline = clone $waktuMasuk;
+                $deadline->modify('+60 days');
+                $interval = $today->diff($deadline);
+                $sisaHari = (int)$interval->format('%r%a'); // %r untuk hasil bisa negatif
         ?>
             <tr>
-                <td><p>Biji Kakao</p><?= htmlspecialchars($row['uid']) ?></td>
+                <td><?= htmlspecialchars($row['uid']) ?></td>
                 <td><?= $waktuMasuk->format('Y-m-d') ?></td>
                 <td><?= $deadline->format('Y-m-d') ?></td>
+                <td class="<?= $sisaHari <= 0 ? 'warning' : '' ?>">
+                    <?= $sisaHari > 0 ? "$sisaHari hari lagi" : "Sudah lewat" ?>
+                </td>
             </tr>
         <?php endwhile; ?>
     <?php else: ?>
-        <tr><td colspan="3">Belum ada data masuk.</td></tr>
+        <tr><td colspan="4">Belum ada data masuk.</td></tr>
     <?php endif; ?>
 </table>
 
