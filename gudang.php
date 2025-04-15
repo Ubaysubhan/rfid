@@ -65,12 +65,46 @@ $kapasitasMaksimum = 160;
             background: #007BFF;
             color: white;
         }
+        .btn-back {
+            display: inline-block;
+            padding: 10px 15px;
+            background-color: #007BFF;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .clock {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
     </style>
+    <script>
+        // Fungsi untuk menampilkan waktu realtime
+        function updateClock() {
+            const now = new Date();
+            const options = {
+                timeZone: "Asia/Jakarta",
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            };
+            const formatter = new Intl.DateTimeFormat('id-ID', options);
+            document.getElementById("clock").textContent = formatter.format(now);
+        }
+
+        setInterval(updateClock, 1000);
+        window.onload = updateClock;
+    </script>
 </head>
 <body>
 
+<a href="index.php" class="btn-back">⬅ Back to Home</a>
 <div class="top-bar">
     <h1>Data Gudang Kakao</h1>
+    <div class="clock" id="clock"></div>
     <div class="kapasitas">Kapasitas: <?= $jumlahBarang ?>/<?= $kapasitasMaksimum ?></div>
 </div>
 
